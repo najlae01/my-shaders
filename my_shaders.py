@@ -11,6 +11,7 @@ bl_info= {
 
 import bpy
 
+
 class ShaderMainPanel(bpy.types.Panel):
     bl_label = "Shader Library"
     bl_idname = "SHADER_PT_MAINPANEL"
@@ -28,6 +29,8 @@ class ShaderMainPanel(bpy.types.Panel):
 
         row = layout.row()
         row.operator("shader.diamond_operator")
+        row = layout.row()
+        row.operator('shader.gold_operator', icon= 'KEYTYPE_KEYFRAME_VEC')
         
         
 
@@ -140,17 +143,65 @@ class SHADER_OT_DIAMOND(bpy.types.Operator):
         bpy.context.object.active_material = material_diamond
         
         return {'FINISHED'}
-        
 
+# Operator for the Gold (basic) Shader
+class SHADER_OT_GOLD(bpy.types.Operator):
+    """Add the Basic Gold Shader to your selected Object."""
+    bl_label = "Gold"
+    bl_idname = 'shader.gold_operator'
+    
+    def execute(self, context):
+        
+            #Create a Shader Material and name it Gold
+        material_gold = bpy.data.materials.new(name= "Gold")
+            #Use Nodes for this Material
+        material_gold.use_nodes = True
+        
+            #Create reference to the Material Output
+        material_output = material_gold.node_tree.nodes.get('Material Output')
+        material_output.location = (600,0)
+        material_output.select = False
+        
+        
+            #Create the RGB Node and Reference it as 'rgb_node'        
+        rgb_node = material_gold.node_tree.nodes.new('ShaderNodeRGB')
+            #Setting the Location 
+        rgb_node.location = (0,-100)
+            #Setting the default color
+        rgb_node.outputs[0].default_value = (1, 0.766, 0.336, 1)
+            #Deselect the Node
+        rgb_node.select = False
+            #Minimize the Node
+        rgb_node.hide = True
+        
+        
+            #Create reference to the Principled Node
+        principled = material_gold.node_tree.nodes.get('Principled BSDF')
+        principled.location = (200,0)
+        principled.select = False
+        principled.inputs[4].default_value = 1.0
+        
+        
+            #Connecting (known as creating links) between the 
+        material_gold.node_tree.links.new(rgb_node.outputs[0], principled.inputs[0])
+            
+            
+            #Adding Material to the currently selected object
+        bpy.context.object.active_material = material_gold
+            
+        return {'FINISHED'}
+    
 
 def register():
     bpy.utils.register_class(ShaderMainPanel)
     bpy.utils.register_class(SHADER_OT_DIAMOND)
+    bpy.utils.register_class(SHADER_OT_GOLD)
 
 
 def unregister():
     bpy.utils.unregister_class(ShaderMainPanel)
     bpy.utils.unregister_class(SHADER_OT_DIAMOND)
+    bpy.utils.unregister_class(SHADER_OT_GOLD)
 
 
 if __name__ == "__main__":
